@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clamp Calculator</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: sans-serif;
+        font-size: 1rem;
+        line-height: 1.5;
+        margin: 0;
+        padding: 0;
+      }
+      h1 {
+        text-align: center;
+      }
+      .form-wrapper {
+        margin: 0 auto 50px;
+        max-width: 600px;
+        padding: 3rem;
+        background-color: #f8f8f8;
+        border-radius: 2rem;
+      }
+      .form-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+      .form-group label {
+        flex: 0 0 200px;
+      }
+      .form-group input {
+        flex: 1 1 auto;
+        margin-right: 1rem;
+      }
+      .copy-wrapper {
+        margin: 0 auto;
+        max-width: 600px;
+        padding-right: 1rem;
+      }
+      svg {
+        display: block;
+        width: 40px;
+        height: 40px;
+        float: right;
+        margin-top: 1rem;
+        cursor: pointer;
+      }
+      svg path {
+        fill: black;
+      }
+      #result {
+        margin: 50px auto;
+        max-width: 600px;
+        background-color: #f5f5f5;
+        font-family: monospace;
+        padding: 3rem;
+        border-radius: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Clamp Calculator</h1>
+    <div class="form-wrapper">
+      <form>
+        <div class="form-group">
+          <label for="minWidth">Min Viewport Width:</label>
+          <input 
+            type="number" 
+            class="form-control" 
+            id="minWidth" 
+            value=""
+            onInput="updateResult(this.value, this.id)"
+          ><span>px</span>
+        </div><!-- /.form-group -->
+        <div class="form-group">
+          <label for="maxWidth">Max Viewport Width:</label>
+          <input 
+            type="number" 
+            class="form-control" 
+            id="maxWidth" 
+            value=""
+            onInput="updateResult(this.value, this.id)"
+          ><span>px</span>
+        </div><!-- /.form-group -->
+        <div class="form-group">
+          <label for="minFontSize">Min Font Size:</label>
+          <input 
+            type="number" 
+            class="form-control" 
+            id="minFontSize" 
+            value=""
+            onInput="updateResult(this.value, this.id)"
+          ><span>rem</span>
+        </div><!-- /.form-group -->
+        <div class="form-group">
+          <label for="maxFontSize">Max Font Size:</label>
+          <input 
+            type="number" 
+            class="form-control" 
+            id="maxFontSize" 
+            value=""
+            onInput="updateResult(this.value, this.id)"
+          ><span>rem</span>
+        </div><!-- /.form-group -->
+        <div class="form-group">
+          <label for="pxPerRem">1 rem:</label>
+          <input 
+            type="number" 
+            class="form-control" 
+            id="pxPerRem" 
+            value=""
+            onInput="updateResult(this.value, this.id)"
+          ><span>px</span>
+        </div><!-- /.form-group -->
+      </form>
+    </div><!-- /.form-wrapper -->
+
+    <div class="copy-wrapper">
+      <svg viewBox="-40 0 512 512" id="copyThis">
+        <path d="m271 512h-191c-44.113281 0-80-35.886719-80-80v-271c0-44.113281 35.886719-80 80-80h191c44.113281 0 80 35.886719 80 80v271c0 44.113281-35.886719 80-80 80zm-191-391c-22.054688 0-40 17.945312-40 40v271c0 22.054688 17.945312 40 40 40h191c22.054688 0 40-17.945312 40-40v-271c0-22.054688-17.945312-40-40-40zm351 261v-302c0-44.113281-35.886719-80-80-80h-222c-11.046875 0-20 8.953125-20 20s8.953125 20 20 20h222c22.054688 0 40 17.945312 40 40v302c0 11.046875 8.953125 20 20 20s20-8.953125 20-20zm0 0" fill="#FFFFFF"/>
+      </svg>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+      const parameters = {
+        minWidth: 320,
+        maxWidth: 1200,
+        minFontSize: 2,
+        maxFontSize: 4,
+        pxPerRem: 10,
+      }
+      const allInputs = document.querySelectorAll('input');
+      allInputs.forEach(input => {
+        input.value = parameters[input.id];
+      });
+
+      calculateClampFunc();
+
+      // copy the result to the clipboard
+      document.querySelector('#copyThis').addEventListener('click', () => {
+        const txt = document.querySelector('#result').innerHTML;
+        const t = document.createElement("textarea");
+        t.value = txt;
+        document.body.appendChild(t);
+        t.select();
+        document.execCommand("copy");
+        document.body.removeChild(t);
+
+        alert(`${txt} Copied to clipboard!`);
+      });
+
+      // calculate the clamp function parameters
+      function calculateClampFunc() {
+        const minWidth = parameters.minWidth / parameters.pxPerRem;
+        const maxWidth = parameters.maxWidth / parameters.pxPerRem;
+        const slope = Number((parameters.maxFontSize - parameters.minFontSize) / (maxWidth - minWidth));
+        const yAxisIntersection = Number(-minWidth * slope + parameters.minFontSize);
+        const clampFunc = `clamp(${parameters.minFontSize}rem, ${yAxisIntersection.toFixed(4)}rem + ${(slope * 100).toFixed(4)}vw, ${parameters.maxFontSize}rem)`;
+        // update the result div
+        document.querySelector('#result').innerHTML = clampFunc;
+      }
+      
+      function updateResult(value, id) {
+        // update the parameters object
+        parameters[id] = value;
+        // calculate the clamp function parameters
+        calculateClampFunc();
+      }
+    </script>
+  </body>
+</html>
